@@ -53,6 +53,7 @@ public class Transmission implements Serializable {
         RQ_DISCONNECT,
         RQ_NICK,
         RQ_LIST,
-        RQ_SEND
+        RQ_SEND,
+        RQ_DIRECT
     }
 }

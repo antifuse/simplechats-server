@@ -1,6 +1,8 @@
 package eu.antifuse.simplechats.server;
 
 import eu.antifuse.simplechats.Transmission;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,26 +11,27 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Server {
+    private Logger logger;
     private final int port;
     private final Set<UserThread> userThreads = new HashSet<>();
 
     public Server(int port) {
+        this.logger = LoggerFactory.getLogger(Server.class);
         this.port = port;
     }
 
     public void execute() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Listening on port " + port);
+            logger.info("Listening on port {}", port);
             while (true) {
                 Socket socket = serverSocket.accept();
-                System.out.println("Connection from IP " + socket.getInetAddress().getHostAddress());
+                logger.info("Connection from IP " + socket.getInetAddress().getHostAddress());
                 UserThread newUser = new UserThread(socket, this);
                 userThreads.add(newUser);
                 newUser.start();
             }
         } catch (IOException ex) {
-            System.out.println("Error in the server: " + ex.getMessage());
-            ex.printStackTrace();
+            logger.error("Error in the server: " + ex.getMessage());
         }
     }
 
@@ -49,7 +52,7 @@ public class Server {
                 aUser.sendMessage(message);
             }
         }
-        System.out.println("Broadcasting: " + message);
+        logger.info("Broadcasting: " + message.serialize());
     }
 
     public void removeUser(UserThread aUser) {
