@@ -18,7 +18,7 @@ public class UserThread extends Thread {
     private BufferedReader reader;
 
     public UserThread(Socket socket, Server server) {
-        this.logger = LoggerFactory.getLogger(Server.class);
+        this.logger = LoggerFactory.getLogger(UserThread.class);
         this.socket = socket;
         this.server = server;
         this.username = null;
