@@ -1,7 +1,10 @@
 package eu.antifuse.simplechats.server;
 
+import eu.antifuse.simplechats.Transmission;
+
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Set;
 
 public class UserThread extends Thread {
@@ -22,10 +25,11 @@ public class UserThread extends Thread {
             output = socket.getOutputStream();
             this.reader = new BufferedReader(new InputStreamReader(input));
             this.writer = new PrintWriter(output, true);
+            writer.println(new Transmission(Transmission.TransmissionType.SYSTEM, "Connected!").serialize());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        writer.println("Connected!");
+
     }
 
     public void setUsername(String username) {
@@ -39,8 +43,8 @@ public class UserThread extends Thread {
     public void run() {
         while (true) {
             try {
-                String message = reader.readLine();
-                if (message.equals("DC")) break;
+                Transmission message = Transmission.deserialize(reader.readLine());
+                if (message.getType() == Transmission.TransmissionType.RQ_DISCONNECT) break;
                 System.out.println(message);
                 this.handleMessage(message);
 
@@ -54,37 +58,37 @@ public class UserThread extends Thread {
         writer.close();
     }
 
-    public void sendMessage(String message) {
-        writer.println(message);
+    public void sendMessage(Transmission message) {
+        writer.println(message.serialize());
     }
 
-    public void handleMessage(String message) {
-        String[] mWArgs = message.split(" ");
-        switch (mWArgs[0]) {
-            case "UN": {
+    public void handleMessage(Transmission message) {
+        switch (message.getType()) {
+            case RQ_NICK: {
                 if (this.username != null) {
-                    server.broadcast(this.username + " changed their name to " + mWArgs[1], null);
+                    server.broadcast(new Transmission(Transmission.TransmissionType.NAMECHANGE, this.username, message.data(0)), null);
                 } else {
-                    server.broadcast(mWArgs[1] + " connected", null);
+                    server.broadcast(new Transmission(Transmission.TransmissionType.JOIN, message.data(0)), null);
                 }
-                this.username = mWArgs[1];
+                this.username = message.data(0);
                 break;
             }
-            case "SN": {
+            case RQ_SEND: {
                 if (this.username == null) {
-                    writer.println("You need to specify a user name.");
+                    this.sendMessage(new Transmission(Transmission.TransmissionType.SYSTEM, "err.nousername"));
                     break;
                 }
-                String content = message.substring(3);
-                server.broadcast("[" + this.username + "] " + content, null);
+                String content = message.data(0);
+                server.broadcast(new Transmission(Transmission.TransmissionType.MESSAGE, this.username, content), null);
                 break;
             }
-            case "LS": {
+            case RQ_LIST: {
                 Set<UserThread> users = server.getUserThreads();
-                this.sendMessage(users.size() + " online users:");
-                for (UserThread u: server.getUserThreads()) {
-                    this.sendMessage(u.getUsername());
-                }
+                ArrayList<String> names = new ArrayList<>();
+                users.forEach((user)-> {
+                    names.add(user.getUsername());
+                });
+                this.sendMessage(new Transmission(Transmission.TransmissionType.USERLIST, names.toArray(new String[0])));
                 break;
             }
         }

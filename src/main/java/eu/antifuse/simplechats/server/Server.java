@@ -1,5 +1,7 @@
 package eu.antifuse.simplechats.server;
 
+import eu.antifuse.simplechats.Transmission;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -41,7 +43,7 @@ public class Server {
         server.execute();
     }
 
-    public void broadcast(String message, UserThread excludeUser) {
+    public void broadcast(Transmission message, UserThread excludeUser) {
         for (UserThread aUser : userThreads) {
             if (aUser != excludeUser) {
                 aUser.sendMessage(message);
@@ -52,7 +54,7 @@ public class Server {
 
     public void removeUser(UserThread aUser) {
         userThreads.remove(aUser);
-        this.broadcast(aUser.getUsername() + " left.", null);
+        this.broadcast(new Transmission(Transmission.TransmissionType.LEAVE, aUser.getUsername()), null);
     }
 
     public boolean hasUsers() {
