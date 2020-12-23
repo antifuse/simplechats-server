@@ -107,7 +107,7 @@ public class UserThread extends Thread {
                     logger.info("Sent err.recNotFound ({}) to user {} ", message.data(0), this.username);
                 }
                 else {
-                    rec.sendMessage(new Transmission(Transmission.TransmissionType.MESSAGE, this.username, message.data(1)));
+                    rec.sendMessage(new Transmission(Transmission.TransmissionType.DIRECT, this.username, message.data(1)));
                     logger.info("Direct message to {} from {}: {}", message.data(0), this.username, message.data(1));
                 }
                 break;

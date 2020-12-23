@@ -50,6 +50,7 @@ public class Transmission implements Serializable {
         USERLIST,
         LEAVE,
         JOIN,
+        DIRECT,
         RQ_DISCONNECT,
         RQ_NICK,
         RQ_LIST,
